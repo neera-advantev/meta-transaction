@@ -5,6 +5,8 @@ import { signInWithGoogle, normalSignIn } from "../services/firebaseAuth";
 import Loader from "./Loader";
 import styles from "../styles/Home.module.css";
 import { ChangeEvent, FormEvent, useState } from "react";
+import { ethers } from "ethers";
+import TestContract from "../TestContract.json";
 
 const Main = () => {
   const { provider, user, login, logout, getUserInfo, getAccounts, getBalance, signMessage, isLoading, signTransaction, signAndSendTransaction, web3Auth, chain, setIsLoading } = useWeb3Auth();
@@ -20,6 +22,18 @@ const handleUsernameChange = (event: ChangeEvent<HTMLInputElement>) => {
 const handlePasswordChange = (event: ChangeEvent<HTMLInputElement>) => {
   setPassword(event.target.value);
 };
+
+const testContract = async () => {
+  const contract = new ethers.Contract(
+    `${process.env.REACT_APP_CONTRACT_ADDRESS}`,
+    TestContract.abi,
+    new ethers.providers.Web3Provider(provider).getSigner(),
+  );
+
+  const txn = await contract.setString('test');
+  const res = await txn.wait();
+  console.log({ res });
+}
 
 const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
   event.preventDefault();
@@ -62,6 +76,9 @@ const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
       </button>
       <button onClick={signMessage} className={styles.card}>
         Sign Message
+      </button>
+      <button onClick={testContract} className={styles.card}>
+        Test Contract
       </button>
 
       {

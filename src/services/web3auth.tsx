@@ -25,7 +25,7 @@ import { ethers } from "ethers";
 
 export interface IWeb3AuthContext {
   web3Auth: Web3AuthNoModal | null;
-  provider: IWalletProvider | null;
+  provider: any | null;
   isLoading: boolean;
   user: unknown;
   chain: string;
@@ -86,7 +86,7 @@ export const Web3AuthProvider: FunctionComponent<IWeb3AuthState> = ({
   chain,
 }: IWeb3AuthProps) => {
   const [web3Auth, setWeb3Auth] = useState<Web3AuthNoModal | null>(null);
-  const [provider, setProvider] = useState<IWalletProvider | null>(null);
+  const [provider, setProvider] = useState<any | null>(null);
   const [user, setUser] = useState<unknown | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -166,10 +166,11 @@ export const Web3AuthProvider: FunctionComponent<IWeb3AuthState> = ({
           performDryRunViewRelayCall: true
         };
         const gsnProvider = await RelayProvider.newProvider({
-          provider: new ethers.providers.Web3Provider(web3prov),
+          provider: new ethers.providers.JsonRpcProvider(web3prov),
           config: config,
         }).init();
-        setWeb3Auth(gsnProvider);
+        setWeb3Auth(web3AuthInstance);
+        setProvider(gsnProvider);
       } catch (error) {
         console.error(error);
       } finally {

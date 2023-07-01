@@ -25,7 +25,8 @@ import { ethers } from "ethers";
 
 export interface IWeb3AuthContext {
   web3Auth: Web3AuthNoModal | null;
-  provider: any | null;
+  provider: ethers.providers.Web3Provider | null;
+  signer: ethers.Signer | null;
   isLoading: boolean;
   user: unknown;
   chain: string;
@@ -47,6 +48,7 @@ export interface IWeb3AuthContext {
 export const Web3AuthContext = createContext<IWeb3AuthContext>({
   web3Auth: null,
   provider: null,
+  signer: null,
   isLoading: false,
   user: null,
   chain: "",
@@ -87,30 +89,32 @@ export const Web3AuthProvider: FunctionComponent<IWeb3AuthState> = ({
 }: IWeb3AuthProps) => {
   const [web3Auth, setWeb3Auth] = useState<Web3AuthNoModal | null>(null);
   const [provider, setProvider] = useState<any | null>(null);
+  const [signer, setSigner] = useState<any | null>(null);
   const [user, setUser] = useState<unknown | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-
-  const setWalletProvider = useCallback(
-    (web3authProvider: SafeEventEmitterProvider) => {
-      const walletProvider = getWalletProvider(
-        chain,
-        web3authProvider,
-        uiConsole
-      );
-      setProvider(walletProvider);
-    },
-    [chain]
-  );
 
   useEffect(() => {
     const subscribeAuthEvents = (web3auth: Web3AuthNoModal) => {
       console.log("******************** inside useEffect");
       
       // Can subscribe to all ADAPTER_EVENTS and LOGIN_MODAL_EVENTS
-      web3auth.on(ADAPTER_EVENTS.CONNECTED, (data: unknown) => {
+      web3auth.on(ADAPTER_EVENTS.CONNECTED, async (data: unknown) => {
         console.log("Yeah!, you are successfully logged in", data);
         setUser(data);
-        setWalletProvider(web3auth.provider!);
+        const config = {
+          paymasterAddress: `${process.env.REACT_APP_PAYMASTER_ADDRESS}`,
+          LoggerConfiguration: {
+            logLevel: 'debug',
+          },
+          performDryRunViewRelayCall: true
+        };
+        const { gsnProvider, gsnSigner } = await RelayProvider.newEthersV5Provider({
+          provider: new ethers.providers.Web3Provider(web3auth.provider as any),
+          config: config,
+        });
+        console.log({gsnProvider, gsnSigner})
+        setProvider(gsnProvider);
+        setSigner(gsnSigner)
       });
 
       web3auth.on(ADAPTER_EVENTS.CONNECTING, () => {
@@ -157,20 +161,9 @@ export const Web3AuthProvider: FunctionComponent<IWeb3AuthState> = ({
           },
         });
         web3AuthInstance.configureAdapter(adapter);
-        const web3prov = await web3AuthInstance.init();
-        const config = {
-          paymasterAddress: `${process.env.REACT_APP_PAYMASTER_ADDRESS}`,
-          LoggerConfiguration: {
-            logLevel: 'debug',
-          },
-          performDryRunViewRelayCall: true
-        };
-        const gsnProvider = await RelayProvider.newProvider({
-          provider: new ethers.providers.JsonRpcProvider(web3prov),
-          config: config,
-        }).init();
+        await web3AuthInstance.init();
+        console.log("Web3Auth initialized",{web3AuthInstance})
         setWeb3Auth(web3AuthInstance);
-        setProvider(gsnProvider);
       } catch (error) {
         console.error(error);
       } finally {
@@ -178,7 +171,7 @@ export const Web3AuthProvider: FunctionComponent<IWeb3AuthState> = ({
       }
     }
     init();
-  }, [chain, web3AuthNetwork, setWalletProvider]);
+  }, [chain, web3AuthNetwork]);
 
   const login = async (
     adapter: WALLET_ADAPTER_TYPE,
@@ -203,8 +196,21 @@ export const Web3AuthProvider: FunctionComponent<IWeb3AuthState> = ({
         },
       });
       console.log({localProvider});
-      
-      setWalletProvider(localProvider!);
+
+      const config = {
+          paymasterAddress: `${process.env.REACT_APP_PAYMASTER_ADDRESS}`,
+          LoggerConfiguration: {
+            logLevel: 'debug',
+          },
+          performDryRunViewRelayCall: true
+        };
+        const { gsnProvider, gsnSigner } = await RelayProvider.newEthersV5Provider({
+          provider: new ethers.providers.Web3Provider(localProvider as any),
+          config: config,
+        });
+        console.log({gsnProvider})
+        setProvider(gsnProvider);
+        setSigner(gsnSigner)
     } catch (error) {
       console.log("error", error);
     } finally {
@@ -288,6 +294,7 @@ export const Web3AuthProvider: FunctionComponent<IWeb3AuthState> = ({
     web3Auth,
     chain,
     provider,
+    signer,
     user,
     isLoading,
     setIsLoading,

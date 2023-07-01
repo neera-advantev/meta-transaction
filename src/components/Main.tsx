@@ -9,7 +9,7 @@ import { ethers } from "ethers";
 import TestContract from "../TestContract.json";
 
 const Main = () => {
-  const { provider, user, login, logout, getUserInfo, getAccounts, getBalance, signMessage, isLoading, signTransaction, signAndSendTransaction, web3Auth, chain, setIsLoading } = useWeb3Auth();
+  const { provider, signer, user, login, logout, getUserInfo, getAccounts, getBalance, signMessage, isLoading, signTransaction, signAndSendTransaction, web3Auth, chain, setIsLoading } = useWeb3Auth();
 console.log({user});
 
 const [username, setUsername] = useState('');
@@ -27,7 +27,7 @@ const testContract = async () => {
   const contract = new ethers.Contract(
     `${process.env.REACT_APP_CONTRACT_ADDRESS}`,
     TestContract.abi,
-    new ethers.providers.Web3Provider(provider).getSigner(),
+    signer || provider?.getSigner(),
   );
 
   const txn = await contract.setString('test');

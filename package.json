@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@opengsn/provider": "^3.0.0-beta.6",
+    "@opengsn/provider": "^3.0.0-beta.8",
     "@solana/web3.js": "^1.66.2",
     "@web3auth/base": "^5.2.0",
     "@web3auth/metamask-adapter": "^5.2.0",
@@ -14,12 +14,12 @@
     "@web3auth/torus-evm-adapter": "^5.2.0",
     "@web3auth/torus-solana-adapter": "^5.2.0",
     "@web3auth/wallet-connect-v1-adapter": "^5.2.0",
+    "ethers": "^5.7.2",
     "firebase": "^9.13.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-loader-spinner": "^5.3.4",
-    "web3": "^1.8.2",
-    "ethers": "^5.7.2"
+    "web3": "^1.8.2"
   },
   "scripts": {
     "start": "react-app-rewired start",
